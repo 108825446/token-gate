@@ -1,4 +1,5 @@
 .vscode/
 .codebuddy/
-.DS_Store/
+.DS_Store
+.claude/
 .venv/
