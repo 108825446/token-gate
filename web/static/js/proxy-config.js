@@ -7,6 +7,9 @@ function showStatus(message, isError = false) {
   el.textContent = message;
   el.className = isError ? 'status error' : 'status';
   el.style.display = 'block';
+  setTimeout(() => {
+    el.style.display = 'none';
+  }, 5000);
 }
 
 function prettyHeaders(headers) {
@@ -34,7 +37,7 @@ function renderConfigRow(item) {
   const enabledClass = item.enabled ? 'badge' : 'badge off';
   const enabledText = item.enabled ? 'Enabled' : 'Disabled';
   const saverBadge = item.token_saver_enabled
-    ? `<span class="badge saver">Token Saver: ${item.token_saver_input_level || 'full'}/${item.token_saver_output_level || 'full'}</span>`
+    ? `<span class="badge saver">TS: ${item.token_saver_input_level || 'full'}/${item.token_saver_output_level || 'full'}</span>`
     : '';
   return `
     <tr data-provider="${item.provider}" data-proxy-key="${item.proxy_key}">
@@ -99,7 +102,7 @@ function openEditModal(provider, proxyKey) {
   editingKey = { provider, proxyKey };
   document.getElementById('modalTitle').textContent = '编辑代理';
   document.getElementById('modalSub').textContent = '修改现有代理实例的上游与启用状态。';
-  document.getElementById('modalHint').textContent = `当前代理地址：${item.proxy_base_url}`;
+  document.getElementById('modalHint').textContent = '当前代理地址：' + item.proxy_base_url;
   fillForm(item, false);
   document.getElementById('configModal').classList.add('open');
 }
@@ -120,7 +123,7 @@ async function submitModal(event) {
   try {
     staticHeaders = JSON.parse(form.static_headers.value || '{}');
   } catch (error) {
-    showStatus(`${provider}/${proxyKey} 的 static_headers 不是合法 JSON`, true);
+    showStatus(provider + '/' + proxyKey + ' 的 static_headers 不是合法 JSON', true);
     return;
   }
   const payload = {
@@ -141,7 +144,7 @@ async function submitModal(event) {
     token_saver_output_level: form.token_saver_output_level.value,
   };
   const isCreate = modalMode === 'create';
-  const url = isCreate ? '/api/v1/proxy/configs' : `/api/v1/proxy/configs/${editingKey.provider}/${editingKey.proxyKey}`;
+  const url = isCreate ? '/api/v1/proxy/configs' : '/api/v1/proxy/configs/' + editingKey.provider + '/' + editingKey.proxyKey;
   const method = isCreate ? 'POST' : 'PUT';
   const resp = await fetch(url, {
     method,
@@ -150,10 +153,10 @@ async function submitModal(event) {
   });
   const body = await resp.json();
   if (!resp.ok) {
-    showStatus(body.detail || `${provider}/${proxyKey} 保存失败`, true);
+    showStatus(body.detail || provider + '/' + proxyKey + ' 保存失败', true);
     return;
   }
-  showStatus(`${provider}/${proxyKey} 配置已保存，代理地址是 ${body.proxy_base_url}`);
+  showStatus(provider + '/' + proxyKey + ' 配置已保存，代理地址是 ' + body.proxy_base_url);
   closeModal();
   await loadConfigs();
 }
@@ -161,7 +164,6 @@ async function submitModal(event) {
 async function toggleConfig(provider, proxyKey) {
   const item = currentConfigs.find(config => config.provider === provider && config.proxy_key === proxyKey);
   if (!item) return;
-  // 显式构建 payload，只包含 ProxyConfigUpdateRequest 中定义的字段
   const payload = {
     provider: item.provider,
     proxy_key: item.proxy_key,
@@ -179,28 +181,29 @@ async function toggleConfig(provider, proxyKey) {
     token_saver_input_level: item.token_saver_input_level,
     token_saver_output_level: item.token_saver_output_level,
   };
-  const resp = await fetch(`/api/v1/proxy/configs/${provider}/${proxyKey}`, {
+  const resp = await fetch('/api/v1/proxy/configs/' + provider + '/' + proxyKey, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
   const body = await resp.json();
   if (!resp.ok) {
-    showStatus(body.detail || `${provider}/${proxyKey} 状态更新失败`, true);
+    showStatus(body.detail || provider + '/' + proxyKey + ' 状态更新失败', true);
     return;
   }
-  showStatus(`${provider}/${proxyKey} 已${body.enabled ? '启用' : '禁用'}`);
+  showStatus(provider + '/' + proxyKey + ' 已' + (body.enabled ? '启用' : '禁用'));
   await loadConfigs();
 }
 
 async function deleteConfig(provider, proxyKey) {
-  const resp = await fetch(`/api/v1/proxy/configs/${provider}/${proxyKey}`, { method: 'DELETE' });
+  if (!confirm('确认删除代理 ' + provider + '/' + proxyKey + ' ?')) return;
+  const resp = await fetch('/api/v1/proxy/configs/' + provider + '/' + proxyKey, { method: 'DELETE' });
   const body = await resp.json();
   if (!resp.ok) {
-    showStatus(body.detail || `${provider}/${proxyKey} 删除失败`, true);
+    showStatus(body.detail || provider + '/' + proxyKey + ' 删除失败', true);
     return;
   }
-  showStatus(`已删除代理 ${provider}/${proxyKey}`);
+  showStatus('已删除代理 ' + provider + '/' + proxyKey);
   await loadConfigs();
 }
 
@@ -209,6 +212,13 @@ async function reloadConfigs() {
   await loadConfigs();
   showStatus('代理配置已从磁盘重新加载');
 }
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape' && document.getElementById('configModal').classList.contains('open')) {
+    closeModal();
+  }
+});
 
 document.getElementById('configForm').addEventListener('submit', submitModal);
 document.getElementById('configForm').provider.addEventListener('change', (event) => {

@@ -1,26 +1,53 @@
 function formatNumber(value) {
   return Number(value || 0).toLocaleString('zh-CN');
 }
+
 function percent(part, total) {
   if (!total) return '0.0%';
   return ((part / total) * 100).toFixed(1) + '%';
 }
+
 function statusClass(status) {
   if (status === 'success') return 'status-success';
   if (status === 'failed') return 'status-failed';
   return 'status-interrupted';
 }
+
 function statusLabel(status) {
   if (status === 'success') return '成功';
   if (status === 'failed') return '失败';
   return '中断';
 }
+
 function formatDatetime(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
   const pad = (n) => String(n).padStart(2, '0');
   return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' +
     pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+}
+
+/** Animated number counter */
+function animateValue(el, target, duration) {
+  const targetInt = Math.round(Number(target || 0));
+  el.dataset.target = targetInt;
+  const start = performance.now();
+  const startVal = 0;
+
+  function update(now) {
+    const elapsed = now - start;
+    const progress = Math.min(elapsed / duration, 1);
+    // ease-out cubic
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const current = Math.round(startVal + (targetInt - startVal) * eased);
+    el.textContent = formatNumber(current);
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      el.textContent = formatNumber(targetInt);
+    }
+  }
+  requestAnimationFrame(update);
 }
 
 let allProxyConfigs = [];
@@ -72,26 +99,43 @@ async function loadSummary(filters) {
 }
 
 function renderSummary(summary, filters) {
+  const requestEl = document.getElementById('requestCount');
+  const successEl = document.getElementById('successCount');
+  const tokenEl = document.getElementById('tokenCount');
+  const savedEl = document.getElementById('tokenSaved');
+
   if (!summary) {
-    document.getElementById('requestCount').textContent = 'ERR';
-    document.getElementById('successCount').textContent = 'ERR';
-    document.getElementById('tokenCount').textContent = 'ERR';
-    document.getElementById('tokenSaved').textContent = 'ERR';
+    requestEl.textContent = 'ERR';
+    successEl.textContent = 'ERR';
+    tokenEl.textContent = 'ERR';
+    savedEl.textContent = 'ERR';
     return;
   }
+
   const reqCount = Number(summary.request_count || 0);
   const sucCount = Number(summary.success_count || 0);
   const tokCount = Number(summary.total_tokens || 0);
   const inputSaved = Number(summary.total_input_tokens_saved || 0);
   const outputSaved = Number(summary.total_output_tokens_saved || 0);
   const totalSaved = inputSaved + outputSaved;
-  document.getElementById('requestCount').textContent = formatNumber(reqCount);
-  document.getElementById('successCount').textContent = formatNumber(sucCount);
-  document.getElementById('tokenCount').textContent = formatNumber(tokCount);
+
+  const animate = true;
+  if (animate) {
+    animateValue(requestEl, reqCount, 800);
+    animateValue(successEl, sucCount, 800);
+    animateValue(tokenEl, tokCount, 1000);
+    animateValue(savedEl, totalSaved, 1000);
+  } else {
+    requestEl.textContent = formatNumber(reqCount);
+    successEl.textContent = formatNumber(sucCount);
+    tokenEl.textContent = formatNumber(tokCount);
+    savedEl.textContent = formatNumber(totalSaved);
+  }
+
   document.getElementById('successRate').textContent = '成功率 ' + percent(sucCount, reqCount);
   document.getElementById('avgToken').textContent = '平均每次 ' + formatNumber(reqCount ? Math.round(tokCount / reqCount) : 0) + ' tokens';
-  document.getElementById('tokenSaved').textContent = formatNumber(totalSaved);
-  document.getElementById('savedRate').textContent = '节省率 ' + percent(totalSaved, totalSaved + tokCount) +
+  document.getElementById('savedRate').textContent =
+    '节省率 ' + percent(totalSaved, totalSaved + tokCount) +
     ' (输入 ' + formatNumber(inputSaved) + ' / 输出 ' + formatNumber(outputSaved) + ')';
 
   const latestEl = document.getElementById('latestDate');
@@ -203,6 +247,8 @@ function updatePagination() {
   }
 }
 
+let refreshTimeout = null;
+
 async function refresh(resetPage) {
   if (resetPage) currentPage = 1;
 
@@ -248,6 +294,13 @@ async function init() {
     if (currentPage < totalPages) {
       currentPage++;
       refresh(false);
+    }
+  });
+
+  // Keyboard shortcut for search
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+      refresh(true);
     }
   });
 

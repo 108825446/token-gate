@@ -5,27 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>LLM Usage Dashboard</title>
   <link rel="stylesheet" href="/static/css/dashboard.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div class="wrap">
+    <!-- Hero -->
     <div class="hero">
       <div>
-        <h1>LLM Usage Dashboard</h1>
+        <h1>// LLM Usage Dashboard</h1>
         <div class="sub">按代理和日期范围筛选调用记录，查看 Token 消耗汇总。</div>
       </div>
       <div class="hero-note">
-        <a class="hero-link" href="/proxy-config">Proxy 配置</a>
-        <strong>当前观察窗口</strong>
-        <span id="latestDate">实时载入中</span>
+        <a class="hero-link" href="/proxy-config">&#9632; Proxy 配置</a>
+        <strong>观察窗口</strong>
+        <span id="latestDate">加载中...</span>
       </div>
     </div>
 
+    <!-- Filter -->
     <div class="filter-bar">
       <div class="filter-group">
         <label for="filterProxy">代理</label>
-        <select id="filterProxy">
-          <option value="">全部代理</option>
-        </select>
+        <select id="filterProxy"><option value="">全部代理</option></select>
       </div>
       <div class="filter-group">
         <label for="filterStart">起始日期</label>
@@ -38,29 +41,31 @@
       <button type="button" id="filterBtn" class="btn-primary">查询</button>
     </div>
 
+    <!-- Summary Cards -->
     <div class="summary-grid" id="summarySection">
       <div class="card">
         <div class="label">请求数</div>
-        <div class="value" id="requestCount">-</div>
+        <div class="value" id="requestCount" data-target="0">0</div>
         <div class="mini">筛选范围内调用次数</div>
       </div>
       <div class="card">
         <div class="label">成功数</div>
-        <div class="value" id="successCount">-</div>
-        <div class="mini" id="successRate">成功率 -</div>
+        <div class="value" id="successCount" data-target="0">0</div>
+        <div class="mini" id="successRate">成功率 --</div>
       </div>
       <div class="card">
         <div class="label">总 Token</div>
-        <div class="value" id="tokenCount">-</div>
-        <div class="mini" id="avgToken">平均每次 -</div>
+        <div class="value" id="tokenCount" data-target="0">0</div>
+        <div class="mini" id="avgToken">平均每次 --</div>
       </div>
       <div class="card saver-card">
         <div class="label">Token 节省</div>
-        <div class="value saver-value" id="tokenSaved">-</div>
-        <div class="mini" id="savedRate">节省率 -</div>
+        <div class="value saver-value" id="tokenSaved" data-target="0">0</div>
+        <div class="mini" id="savedRate">节省率 --</div>
       </div>
     </div>
 
+    <!-- Detail Table -->
     <div class="card table-card">
       <div class="table-toolbar">
         <div class="label">调用明细</div>
@@ -87,7 +92,7 @@
         </table>
       </div>
       <div id="tableEmpty" class="empty" style="display:none;">暂无匹配记录</div>
-      <div id="tableLoading" class="empty" style="display:none;">加载中…</div>
+      <div id="tableLoading" class="empty" style="display:none;">加载中</div>
       <div class="pagination" id="paginationBar">
         <div class="pagination-left">
           <label>每页</label>
