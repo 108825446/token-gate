@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LLM Usage Dashboard</title>
+  <link rel="stylesheet" href="/static/css/dashboard.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>LLM Usage Dashboard</h1>
+        <div class="sub">按代理和日期范围筛选调用记录，查看 Token 消耗汇总。</div>
+      </div>
+      <div class="hero-note">
+        <a class="hero-link" href="/proxy-config">Proxy 配置</a>
+        <strong>当前观察窗口</strong>
+        <span id="latestDate">实时载入中</span>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label for="filterProxy">代理</label>
+        <select id="filterProxy">
+          <option value="">全部代理</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filterStart">起始日期</label>
+        <input type="date" id="filterStart" />
+      </div>
+      <div class="filter-group">
+        <label for="filterEnd">截止日期</label>
+        <input type="date" id="filterEnd" />
+      </div>
+      <button type="button" id="filterBtn" class="btn-primary">查询</button>
+    </div>
+
+    <div class="summary-grid" id="summarySection">
+      <div class="card">
+        <div class="label">请求数</div>
+        <div class="value" id="requestCount">-</div>
+        <div class="mini">筛选范围内调用次数</div>
+      </div>
+      <div class="card">
+        <div class="label">成功数</div>
+        <div class="value" id="successCount">-</div>
+        <div class="mini" id="successRate">成功率 -</div>
+      </div>
+      <div class="card">
+        <div class="label">总 Token</div>
+        <div class="value" id="tokenCount">-</div>
+        <div class="mini" id="avgToken">平均每次 -</div>
+      </div>
+      <div class="card saver-card">
+        <div class="label">Token 节省</div>
+        <div class="value saver-value" id="tokenSaved">-</div>
+        <div class="mini" id="savedRate">节省率 -</div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-toolbar">
+        <div class="label">调用明细</div>
+        <span class="table-count" id="recordCount"></span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="num" style="width:50px;">序号</th>
+              <th>代理</th>
+              <th>模型</th>
+              <th>调用时间</th>
+              <th class="num">输入 Token</th>
+              <th class="num">输出 Token</th>
+              <th class="num">Token 缓存</th>
+              <th class="num">总计 Token</th>
+              <th class="num">Token 节省</th>
+              <th>状态</th>
+              <th class="num">延迟 (ms)</th>
+            </tr>
+          </thead>
+          <tbody id="usageTableBody"></tbody>
+        </table>
+      </div>
+      <div id="tableEmpty" class="empty" style="display:none;">暂无匹配记录</div>
+      <div id="tableLoading" class="empty" style="display:none;">加载中…</div>
+      <div class="pagination" id="paginationBar">
+        <div class="pagination-left">
+          <label>每页</label>
+          <select id="pageSizeSelect">
+            <option value="20">20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span>条</span>
+        </div>
+        <div class="pagination-right">
+          <button type="button" id="prevPageBtn">上一页</button>
+          <span id="pageInfo">第 0/0 页</span>
+          <button type="button" id="nextPageBtn">下一页</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="/static/js/dashboard.js"></script>
+</body>
+</html>

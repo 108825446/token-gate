@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Proxy Config Manager</title>
+  <link rel="stylesheet" href="/static/css/proxy-config.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>Proxy Config Manager</h1>
+        <div class="sub">在这里维护多个代理实例。每个实例都有独立的代理地址、上游地址、启用状态和鉴权参数，适合一个 provider 下同时接多个环境或团队专用代理。</div>
+      </div>
+      <div class="actions">
+        <a class="btn secondary" href="/dashboard">Dashboard</a>
+        <button type="button" onclick="reloadConfigs()">刷新配置</button>
+      </div>
+    </div>
+    <div class="card table-wrap">
+      <div class="toolbar">
+        <div class="toolbar-note">列表页展示所有代理实例，支持新增、编辑、启用/禁用和删除。</div>
+        <button type="button" onclick="openCreateModal()">新增代理</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>代理</th>
+            <th>状态</th>
+            <th>独立地址</th>
+            <th>上游地址</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="configRows"></tbody>
+      </table>
+    </div>
+    <div class="status" id="globalStatus"></div>
+  </div>
+
+  <div class="modal" id="configModal">
+    <div class="modal-panel">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="modalTitle">新增代理</div>
+          <div class="provider-sub" id="modalSub">创建新的代理实例并生成独立接入地址。</div>
+        </div>
+        <button type="button" class="close-btn" onclick="closeModal()">关闭</button>
+      </div>
+      <form id="configForm">
+        <div class="form-grid">
+          <div class="field">
+            <label>Provider</label>
+            <select name="provider">
+              <option value="openai">openai</option>
+              <option value="anthropic">anthropic</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Proxy Key</label>
+            <input name="proxy_key" value="default" />
+          </div>
+          <div class="field full">
+            <label>Display Name</label>
+            <input name="display_name" value="Default Proxy" />
+          </div>
+          <div class="field full">
+            <label>Upstream Base URL</label>
+            <input name="base_url" placeholder="https://api.openai.com" />
+          </div>
+          <div class="field">
+            <label>Auth Header</label>
+            <input name="auth_header" value="Authorization" />
+          </div>
+          <div class="field">
+            <label>API Key Env</label>
+            <input name="api_key_env" value="OPENAI_API_KEY" />
+          </div>
+          <div class="field">
+            <label>API Key Prefix</label>
+            <input name="api_key_prefix" value="Bearer" />
+          </div>
+          <div class="field">
+            <label>Timeout Seconds</label>
+            <input name="timeout_seconds" type="number" min="1" value="60" />
+          </div>
+          <div class="field">
+            <label>Forward User Auth</label>
+            <select name="forward_user_auth">
+              <option value="false" selected>false</option>
+              <option value="true">true</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Enabled</label>
+            <select name="enabled">
+              <option value="true" selected>true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>SSL Verify</label>
+            <select name="ssl_verify">
+              <option value="true" selected>true</option>
+              <option value="false">false</option>
+            </select>
+          </div>
+          <div class="field full divider-label">
+            <label>Token Saver (Caveman 风格压缩)</label>
+          </div>
+          <div class="field">
+            <label>Token Saver</label>
+            <select name="token_saver_enabled">
+              <option value="false" selected>false</option>
+              <option value="true">true</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>输入压缩等级</label>
+            <select name="token_saver_input_level">
+              <option value="off">off</option>
+              <option value="lite">lite</option>
+              <option value="full" selected>full</option>
+              <option value="ultra">ultra</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>输出压缩等级</label>
+            <select name="token_saver_output_level">
+              <option value="off">off</option>
+              <option value="lite">lite</option>
+              <option value="full" selected>full</option>
+              <option value="ultra">ultra</option>
+              <option value="wenyan">wenyan(文言文)</option>
+            </select>
+          </div>
+          <div class="field full">
+            <label>Static Headers (JSON)</label>
+            <textarea name="static_headers">{}</textarea>
+          </div>
+        </div>
+        <div class="row">
+          <div class="hint" id="modalHint">保存后会生成独立代理地址。</div>
+          <div class="actions">
+            <button type="button" class="secondary" onclick="closeModal()">取消</button>
+            <button type="submit">保存配置</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/js/proxy-config.js"></script>
+</body>
+</html>

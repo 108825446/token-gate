@@ -1,0 +1,21 @@
+{
+  "providers": [
+    {
+      "provider": "anthropic",
+      "proxy_key": "default",
+      "display_name": "deepseek",
+      "base_url": "https://api.deepseek.com/anthropic",
+      "auth_header": "x-api-key",
+      "api_key_env": "ANTHROPIC_AUTH_TOKEN",
+      "api_key_prefix": "",
+      "forward_user_auth": true,
+      "timeout_seconds": 60,
+      "enabled": true,
+      "ssl_verify": true,
+      "static_headers": {},
+      "token_saver_enabled": false,
+      "token_saver_input_level": "full",
+      "token_saver_output_level": "wenyan"
+    }
+  ]
+}
